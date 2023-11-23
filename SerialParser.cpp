@@ -5,6 +5,8 @@ bool SerialParser::enableFeedback = false;
 
 bool SerialParser::run(char *cmd, long &code)
 {
+    static unsigned long long time = 0;
+
     if (!Serial.available())
     {
         return false;
@@ -13,23 +15,26 @@ bool SerialParser::run(char *cmd, long &code)
     char buffer[32];
     int length = 0;
 
-    while (Serial.available())
+    while (1)
     {
-        char ch = Serial.read();
-        if (ch == '\n')
+        if (millis() > time)
         {
-            break;
-        }
-        else if (length < sizeof(buffer) - 1)
-        {
-            if (ch >= 'a' && ch <= 'z')
+            time = millis() + SERIAL_READ_DELAY_TIME;
+            char ch = Serial.read();
+            if (ch == '\n')
             {
-                ch -= 32;
+                break;
             }
-            buffer[length] = ch;
-            length++;
+            else if (length < sizeof(buffer) - 1)
+            {
+                if (ch >= 'a' && ch <= 'z')
+                {
+                    ch -= 32;
+                }
+                buffer[length] = ch;
+                length++;
+            }
         }
-        delay(SERIAL_READ_DELAY_TIME);
     }
 
     if (length <= 0)
