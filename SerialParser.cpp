@@ -1,7 +1,10 @@
 
 #include "SerialParser.h"
 
-bool SerialParser::enableFeedback = false;
+#define DEFAULT_CODE_VALUE 0
+
+bool SerialParser::mEnableFeedback = false;
+bool SerialParser::mAllowEmptyCode = false;
 
 bool SerialParser::run(char *cmd, long &code)
 {
@@ -14,6 +17,7 @@ bool SerialParser::run(char *cmd, long &code)
 
     char buffer[32];
     int length = 0;
+    bool hasSpace = false;
 
     while (1)
     {
@@ -21,6 +25,17 @@ bool SerialParser::run(char *cmd, long &code)
         {
             time = millis() + SERIAL_READ_DELAY_TIME;
             char ch = Serial.read();
+            if (ch == ' ')
+            {
+                if (length == 0)
+                {
+                    continue;
+                }
+                else
+                {
+                    hasSpace = true;
+                }
+            }
             if (ch == '\n')
             {
                 break;
@@ -43,30 +58,41 @@ bool SerialParser::run(char *cmd, long &code)
     }
 
     buffer[length] = '\0';
-    int ret = sscanf(buffer, "%s %ld", cmd, &code);
-    if (ret != 2)
+    bool ret = false;
+    if (sscanf(buffer, "%s %ld", cmd, &code) == 2)
     {
-        if (enableFeedback)
-        {
-            Serial.print(F("[SERIAL] Error: "));
-            Serial.println(buffer);
-        }
-        return false;
+        ret = true;
     }
-    else
+    else if (mAllowEmptyCode && !hasSpace && sscanf(buffer, "%s", cmd) == 1)
     {
-        if (enableFeedback)
+        code = DEFAULT_CODE_VALUE;
+        ret = true;
+    }
+
+    if (mEnableFeedback)
+    {
+        if (ret)
         {
             Serial.print(F("[SERIAL] Cmd:"));
             Serial.print(cmd);
             Serial.print(F(", Code:"));
             Serial.println(code);
         }
-        return true;
+        else
+        {
+            Serial.print(F("[SERIAL] Error: "));
+            Serial.println(buffer);
+        }
     }
+    return ret;
 }
 
 void SerialParser::setFeedbackEnable(bool enable)
 {
-    enableFeedback = enable;
+    mEnableFeedback = enable;
+}
+
+void SerialParser::setAllowEmptyCode(bool enable)
+{
+    mAllowEmptyCode = enable;
 }
