@@ -3,6 +3,7 @@
 
 #define DEFAULT_CODE_VALUE 0
 #define STRING_LENGTH_LIMIT 32
+#define USE_UPPER_CASE_CMD
 
 bool SerialParser::mEnableFeedback = false;
 bool SerialParser::mAllowEmptyCode = false;
@@ -29,10 +30,6 @@ bool SerialParser::run(String *cmd, long *value, String *valueStr)
             }
             else if (buffer.length() < STRING_LENGTH_LIMIT)
             {
-                if (ch >= 'a' && ch <= 'z')
-                {
-                    ch -= 32;
-                }
                 buffer += ch;
             }
         }
@@ -90,6 +87,13 @@ bool SerialParser::run(String *cmd, long *value, String *valueStr)
             ret = true;
         }
     }
+
+#ifdef USE_UPPER_CASE_CMD
+    if (ret)
+    {
+        cmd->toUpperCase();
+    }
+#endif
 
     if (mEnableFeedback)
     {
