@@ -2,7 +2,7 @@
 #include "SerialParser.h"
 
 #define DEFAULT_CODE_VALUE 0
-#define STRING_LENGTH_LIMIT 32
+#define STRING_LENGTH_LIMIT 64
 #define USE_UPPER_CASE_CMD
 
 bool SerialParser::mEnableFeedback = false;
