@@ -98,7 +98,7 @@ bool SerialParser::run(String *cmd, long *value, String *valueStr)
             Serial.print(F("[SERIAL] Cmd: '"));
             Serial.print(*cmd);
             Serial.print(F("', value: '"));
-            if (valueStr)
+            if (valueStr && valueStr->length() > 0)
             {
                 Serial.print(*value);
                 Serial.print(F("', valueStr: '"));
