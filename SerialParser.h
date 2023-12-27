@@ -15,9 +15,13 @@ private:
     static bool mAllowEmptyCode;
 
 public:
-    static bool run(char *cmd, long &code);
+    static bool run(String *cmd, long *value, String *valueStr);
+    static bool run(String *cmd, long *value);
     static void setFeedbackEnable(bool enable);
     static void setAllowEmptyCode(bool enable);
+
+private:
+    static void trim(String &str);
 };
 
 #endif

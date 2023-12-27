@@ -8,6 +8,7 @@
 
 String cmd;
 long value;
+String valueStr;
 
 void setup()
 {
@@ -18,7 +19,7 @@ void setup()
 void loop()
 {
     // Template: <cmd><space><value><enter>
-    if (SerialParser::run(&cmd, &value))
+    if (SerialParser::run(&cmd, &value, &valueStr))
     {
         if (cmd.equals("FUNCTION_NAME"))
         {

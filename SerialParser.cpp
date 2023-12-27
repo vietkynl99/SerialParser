@@ -2,11 +2,12 @@
 #include "SerialParser.h"
 
 #define DEFAULT_CODE_VALUE 0
+#define STRING_LENGTH_LIMIT 32
 
 bool SerialParser::mEnableFeedback = false;
 bool SerialParser::mAllowEmptyCode = false;
 
-bool SerialParser::run(char *cmd, long &code)
+bool SerialParser::run(String *cmd, long *value, String *valueStr)
 {
     static unsigned long long time = 0;
 
@@ -15,76 +16,114 @@ bool SerialParser::run(char *cmd, long &code)
         return false;
     }
 
-    char buffer[32];
-    int length = 0;
-    bool hasSpace = false;
-
+    String buffer = "";
     while (1)
     {
         if (millis() > time)
         {
             time = millis() + SERIAL_READ_DELAY_TIME;
             char ch = Serial.read();
-            if (ch == ' ')
-            {
-                if (length == 0)
-                {
-                    continue;
-                }
-                else
-                {
-                    hasSpace = true;
-                }
-            }
             if (ch == '\n')
             {
                 break;
             }
-            else if (length < sizeof(buffer) - 1)
+            else if (buffer.length() < STRING_LENGTH_LIMIT)
             {
                 if (ch >= 'a' && ch <= 'z')
                 {
                     ch -= 32;
                 }
-                buffer[length] = ch;
-                length++;
+                buffer += ch;
             }
         }
     }
-
-    if (length <= 0)
+    trim(buffer);
+    if (buffer.length() <= 0)
     {
         return false;
     }
 
-    buffer[length] = '\0';
     bool ret = false;
-    if (sscanf(buffer, "%s %ld", cmd, &code) == 2)
+    int index = buffer.indexOf(' ');
+    if (index <= 0)
     {
-        ret = true;
+        if (mAllowEmptyCode)
+        {
+            *cmd = buffer;
+            *value = DEFAULT_CODE_VALUE;
+            if (valueStr)
+            {
+                *valueStr = "";
+            }
+            ret = true;
+        }
+        else
+        {
+            ret = false;
+        }
     }
-    else if (mAllowEmptyCode && !hasSpace && sscanf(buffer, "%s", cmd) == 1)
+    else
     {
-        code = DEFAULT_CODE_VALUE;
-        ret = true;
+        String str1 = buffer.substring(0, index);
+        String str2 = buffer.substring(index + 1);
+        if (str1.length() <= 0 || str2.length() <= 0)
+        {
+            ret = false;
+        }
+
+        long longValue = str2.toInt();
+        if (!(longValue == 0 && !str1.equals("0")))
+        {
+            *cmd = str1;
+            *value = longValue;
+            if (valueStr)
+            {
+                *valueStr = str2;
+            }
+            ret = true;
+        }
+        else if (valueStr)
+        {
+            *cmd = str1;
+            *value = DEFAULT_CODE_VALUE;
+            *valueStr = str2;
+            ret = true;
+        }
     }
 
     if (mEnableFeedback)
     {
         if (ret)
         {
-            Serial.print(F("[SERIAL] Cmd:"));
-            Serial.print(cmd);
-            Serial.print(F(", Code:"));
-            Serial.println(code);
+            Serial.print(F("[SERIAL] Cmd: '"));
+            Serial.print(*cmd);
+            Serial.print(F("', value: '"));
+            if (valueStr)
+            {
+                Serial.print(*value);
+                Serial.print(F("', valueStr: '"));
+                Serial.print(*valueStr);
+                Serial.println("'");
+            }
+            else
+            {
+                Serial.print(*value);
+                Serial.println("'");
+            }
         }
         else
         {
-            Serial.print(F("[SERIAL] Error: "));
-            Serial.println(buffer);
+            Serial.print(F("[SERIAL] Error: '"));
+            Serial.print(buffer);
+            Serial.println("'");
         }
     }
     return ret;
+}
+
+bool SerialParser::run(String *cmd, long *value)
+{
+    return run(cmd, value, nullptr);
 }
 
 void SerialParser::setFeedbackEnable(bool enable)
@@ -95,4 +134,16 @@ void SerialParser::setFeedbackEnable(bool enable)
 void SerialParser::setAllowEmptyCode(bool enable)
 {
     mAllowEmptyCode = enable;
+}
+
+void SerialParser::trim(String &str)
+{
+    while (str.length() > 0 && (str.indexOf(' ') == 0 || str.indexOf('\r') == 0 || str.indexOf('\n') == 0))
+    {
+        str = str.substring(1);
+    }
+    while (str.length() > 0 && (str.lastIndexOf(' ') == str.length() - 1 || str.lastIndexOf('\r') == str.length() - 1 || str.lastIndexOf('\n') == str.length() - 1))
+    {
+        str = str.substring(0, str.length() - 1);
+    }
 }
