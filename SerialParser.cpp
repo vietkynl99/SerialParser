@@ -54,37 +54,33 @@ bool SerialParser::run(String *cmd, long *value, String *valueStr)
             }
             ret = true;
         }
-        else
-        {
-            ret = false;
-        }
     }
     else
     {
         String str1 = buffer.substring(0, index);
         String str2 = buffer.substring(index + 1);
-        if (str1.length() <= 0 || str2.length() <= 0)
+        trim(str1);
+        trim(str2);
+        if (str1.length() > 0 && str2.length() > 0)
         {
-            ret = false;
-        }
-
-        long longValue = str2.toInt();
-        if (!(longValue == 0 && !str1.equals("0")))
-        {
-            *cmd = str1;
-            *value = longValue;
-            if (valueStr)
+            long longValue = str2.toInt();
+            if (!(longValue == 0 && !str1.equals("0")))
             {
-                *valueStr = str2;
+                *cmd = str1;
+                *value = longValue;
+                if (valueStr)
+                {
+                    *valueStr = str2;
+                }
+                ret = true;
             }
-            ret = true;
-        }
-        else if (valueStr)
-        {
-            *cmd = str1;
-            *value = DEFAULT_CODE_VALUE;
-            *valueStr = str2;
-            ret = true;
+            else if (valueStr)
+            {
+                *cmd = str1;
+                *value = DEFAULT_CODE_VALUE;
+                *valueStr = str2;
+                ret = true;
+            }
         }
     }
 
