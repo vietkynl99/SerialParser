@@ -10,7 +10,7 @@ bool SerialParser::mAllowEmptyCode = false;
 
 bool SerialParser::run(String *cmd, long *value, String *valueStr)
 {
-    static unsigned long long time = 0;
+    static unsigned long time = 0;
 
     if (!Serial.available())
     {
@@ -20,9 +20,9 @@ bool SerialParser::run(String *cmd, long *value, String *valueStr)
     String buffer = "";
     while (1)
     {
-        if (millis() > time)
+        if ((unsigned long)(millis() - time) > SERIAL_READ_DELAY_TIME)
         {
-            time = millis() + SERIAL_READ_DELAY_TIME;
+            time = millis();
             char ch = Serial.read();
             if (ch == '\n')
             {
