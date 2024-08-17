@@ -13,8 +13,10 @@ class SerialParser
 private:
     static bool mEnableFeedback;
     static bool mAllowEmptyCode;
+    static Stream *mStream;
 
 public:
+    static void setStream(const Stream *stream);
     static bool run(String *cmd, long *value, String *valueStr);
     static bool run(String *cmd, long *value);
     static void setFeedbackEnable(bool enable);

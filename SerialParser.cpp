@@ -7,12 +7,18 @@
 
 bool SerialParser::mEnableFeedback = false;
 bool SerialParser::mAllowEmptyCode = false;
+Stream *SerialParser::mStream = &Serial;
+
+void SerialParser::setStream(const Stream *stream)
+{
+    mStream = stream;
+}
 
 bool SerialParser::run(String *cmd, long *value, String *valueStr)
 {
     static unsigned long time = 0;
 
-    if (!Serial.available())
+    if (!mStream->available())
     {
         return false;
     }
@@ -23,7 +29,7 @@ bool SerialParser::run(String *cmd, long *value, String *valueStr)
         if ((unsigned long)(millis() - time) > SERIAL_READ_DELAY_TIME)
         {
             time = millis();
-            char ch = Serial.read();
+            char ch = mStream->read();
             if (ch == '\n')
             {
                 break;
@@ -95,27 +101,27 @@ bool SerialParser::run(String *cmd, long *value, String *valueStr)
     {
         if (ret)
         {
-            Serial.print(F("[SERIAL] Cmd: '"));
-            Serial.print(*cmd);
-            Serial.print(F("', value: '"));
+            mStream->print(F("[SERIAL] Cmd: '"));
+            mStream->print(*cmd);
+            mStream->print(F("', value: '"));
             if (valueStr && valueStr->length() > 0)
             {
-                Serial.print(*value);
-                Serial.print(F("', valueStr: '"));
-                Serial.print(*valueStr);
-                Serial.println("'");
+                mStream->print(*value);
+                mStream->print(F("', valueStr: '"));
+                mStream->print(*valueStr);
+                mStream->println("'");
             }
             else
             {
-                Serial.print(*value);
-                Serial.println("'");
+                mStream->print(*value);
+                mStream->println("'");
             }
         }
         else
         {
-            Serial.print(F("[SERIAL] Error: '"));
-            Serial.print(buffer);
-            Serial.println("'");
+            mStream->print(F("[SERIAL] Error: '"));
+            mStream->print(buffer);
+            mStream->println("'");
         }
     }
     return ret;
