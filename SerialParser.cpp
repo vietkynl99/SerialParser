@@ -70,7 +70,7 @@ bool SerialParser::run(String *cmd, long *value, String *valueStr)
         if (str1.length() > 0 && str2.length() > 0)
         {
             long longValue = str2.toInt();
-            if (!(longValue == 0 && !str1.equals("0")))
+            if (longValue != 0 || str2.equals("0"))
             {
                 *cmd = str1;
                 *value = longValue;
